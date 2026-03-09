@@ -1,0 +1,85 @@
+﻿@model ecartmvc.Models.User
+
+@{
+    ViewData["Title"] = "Account Settings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4">Account Settings</h2>
+
+    <!-- ✅ Success Message -->
+    @if (ViewBag.SuccessMessage != null)
+    {
+        <div class="alert alert-success">@ViewBag.SuccessMessage</div>
+    }
+
+    <!-- ✅ Validation Errors -->
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger">
+            Please correct the errors below.
+        </div>
+    }
+
+    <form asp-action="Settings" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+            <!-- Profile Info -->
+            <div class="col-md-6">
+                <h4 class="mb-3">Profile Information</h4>
+
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label"></label>
+                    <input asp-for="FullName" class="form-control" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Username" class="form-label"></label>
+                    <input asp-for="Username" class="form-control" />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" type="email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-control" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Password Change -->
+            <div class="col-md-6">
+                <h4 class="mb-3">Change Password</h4>
+
+                <div class="mb-3">
+                    <label for="CurrentPassword" class="form-label">Current Password</label>
+                    <input name="CurrentPassword" type="password" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="NewPassword" class="form-label">New Password</label>
+                    <input name="NewPassword" type="password" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="ConfirmPassword" class="form-label">Confirm New Password</label>
+                    <input name="ConfirmPassword" type="password" class="form-control" />
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
+    </form>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

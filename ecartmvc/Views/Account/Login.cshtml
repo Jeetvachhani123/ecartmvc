@@ -1,0 +1,43 @@
+﻿@model ecartmvc.Models.LoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<!-- Fullscreen center login section -->
+<section class="vh-100 d-flex align-items-center justify-content-center bg-light">
+    <div class="card shadow-lg p-4 rounded-4" style="width: 100%; max-width: 400px;">
+        <div class="card-body">
+            <h3 class="mb-4 text-center fw-bold">Sign In</h3>
+
+            <form asp-action="Login" method="post" novalidate>
+                <input type="hidden" name="returnUrl" value="@(ViewBag.ReturnUrl ?? "")" />
+
+                <div class="mb-3 form-floating">
+                    <input asp-for="Username" class="form-control" placeholder="Username" />
+                    <label asp-for="Username">Username</label>
+                    <span asp-validation-for="Username" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3 form-floating">
+                    <input asp-for="Password" class="form-control" type="password" placeholder="Password" />
+                    <label asp-for="Password">Password</label>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-primary rounded-pill">Log In</button>
+                </div>
+
+                <div class="text-center">
+                    <small>Don't have an account? <a href="~/Account/Register">Register here</a></small>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

@@ -1,0 +1,42 @@
+﻿@model ecartmvc.Models.Order
+
+@{
+    ViewData["Title"] = "Order Details";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Order #@Model.Id Details</h2>
+    <p><strong>Customer:</strong> @Model.CustomerName</p>
+    <p><strong>Email:</strong> @Model.Email</p>
+    <p><strong>Phone:</strong> @Model.Phone</p>
+    <p><strong>Address:</strong> @Model.Address, @Model.City - @Model.PostalCode</p>
+    <p><strong>Status:</strong> @Model.Status</p>
+    <p><strong>Date:</strong> @Model.OrderDate.ToString("dd MMM yyyy")</p>
+    <p><strong>Total:</strong> ₹@Model.TotalAmount.ToString("F2")</p>
+
+    <h4>Order Items</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.OrderItems)
+            {
+                <tr>
+                    <td>@item.Product.Name</td>
+                    <td>@item.Quantity</td>
+                    <td>₹@item.Price.ToString("F2")</td>
+                    <td>₹@((item.Price * item.Quantity).ToString("F2"))</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <a asp-action="ManageOrders" class="btn btn-secondary">Back</a>
+</div>

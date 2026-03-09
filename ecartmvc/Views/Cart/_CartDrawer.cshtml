@@ -1,0 +1,47 @@
+﻿@model List<ecartmvc.Models.CartItem>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center">
+        Your cart is empty. <a href="/Products">Continue shopping</a>
+    </div>
+}
+else
+{
+    <ul class="list-unstyled">
+        @foreach (var item in Model)
+        {
+            <li class="d-flex mb-3 border-bottom pb-2">
+                <div class="me-3" style="width:70px; height:70px; overflow:hidden;">
+                    <img src="@item.Product?.ImageUrl" class="img-fluid rounded" alt="@item.Product?.Name" />
+                </div>
+                <div class="flex-grow-1">
+                    <h6 class="mb-1">@item.Product?.Name</h6>
+                    <div class="text-muted">₹@string.Format("{0:N2}", item.Product?.Price ?? 0)</div>
+
+                    <div class="d-flex align-items-center mt-1">
+                        <button type="button" class="btn btn-sm btn-outline-secondary qty-btn" data-id="@item.Id" data-action="minus">-</button>
+                        <input type="number" class="form-control form-control-sm text-center mx-1 qty-input"
+                               value="@item.Quantity" min="1" style="width:60px;" data-id="@item.Id" />
+                        <button type="button" class="btn btn-sm btn-outline-secondary qty-btn" data-id="@item.Id" data-action="plus">+</button>
+                    </div>
+                </div>
+                <div class="ms-2 text-end">
+                    <a href="@Url.Action("Remove", "Cart", new { id = item.Id })" class="btn btn-sm btn-danger">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+            </li>
+        }
+    </ul>
+
+    <div class="border-top pt-3">
+        <div class="d-flex justify-content-between mb-2">
+            <strong>Total (@Model.Sum(x => x.Quantity) items)</strong>
+            <strong>₹@string.Format("{0:N2}", ViewBag.Total)</strong>
+        </div>
+        <div class="d-grid">
+            <a href="/Orders/Checkout" class="btn btn-success">Proceed to Checkout</a>
+        </div>
+    </div>
+}

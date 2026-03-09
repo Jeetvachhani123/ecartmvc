@@ -1,0 +1,139 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Home";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var categories = ViewBag.Categories as List<ecartmvc.Models.Category>;
+    var products = ViewBag.Products as List<ecartmvc.Models.Product>;
+}
+
+<!-- ✅ Hero Section -->
+<section class="hero-section text-white text-center d-flex align-items-center justify-content-center"
+         style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url('/images/item.jpg') no-repeat center center/cover; height: 80vh;">
+    <div class="container">
+        <h1 class="display-3 fw-bold mb-3">Discover the Latest Electronics</h1>
+        <p class="lead mb-4">Mobiles, Laptops, Gaming & More – Shop the Future of Technology</p>
+        <a href="/Products" class="btn btn-lg btn-primary rounded-pill px-5">Shop Now</a>
+    </div>
+</section>
+
+<div class="container mt-5">
+
+    <!-- ✅ New Arrivals -->
+    <section class="mb-5">
+        <h2 class="fw-bold text-center mb-3">✨ New Arrivals</h2>
+        <p class="text-center text-muted mb-5">Fresh tech products you’ll love</p>
+        <div id="productContainer" class="row g-4">
+            @await Html.PartialAsync("_ProductListPartial", products)
+        </div>
+    </section>
+
+    <!-- ✅ Popular Categories -->
+    <section class="py-5 bg-light rounded-4 shadow-sm mb-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">📂 Shop by Category</h2>
+                <p class="text-muted">Find the best products in each category</p>
+            </div>
+            <div id="categoryContainer" class="row g-4">
+                @await Html.PartialAsync("_CategoryListPartial", categories)
+            </div>
+        </div>
+    </section>
+
+    <!-- ✅ Featured Deals -->
+    <section class="mb-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">🔥 Hot Deals</h2>
+            <p class="text-muted">Grab the best discounts before they’re gone</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <img src="~/images/laptopphoto.png" class="card-img-top" alt="Laptop Deal">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Gaming Laptops</h5>
+                        <p class="text-muted">Up to 30% off</p>
+                        <a href="/Products?category=laptops" class="btn btn-outline-primary btn-sm">Shop Now</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <img src="~/images/mobilephoto.png" class="card-img-top" alt="Mobile Deal">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Latest Smartphones</h5>
+                        <p class="text-muted">Starting at ₹9,999</p>
+                        <a href="/Products?category=mobiles" class="btn btn-outline-primary btn-sm">Explore</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <img src="~/images/playstation.png" class="card-img-top" alt="PlayStation Deal">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">PlayStation & Gaming</h5>
+                        <p class="text-muted">Bundle offers available</p>
+                        <a href="/Products?category=playstation" class="btn btn-outline-primary btn-sm">Shop Gaming</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ✅ Testimonials -->
+    <section class="bg-dark text-white py-5 rounded-4 mb-5">
+        <div class="container text-center">
+            <h2 class="fw-bold mb-4">💬 What Our Customers Say</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <blockquote class="blockquote">
+                        <p>“Best prices and fast delivery. Got my iPhone in just 2 days.”</p>
+                        <footer class="blockquote-footer text-white-50">Rahul Sharma</footer>
+                    </blockquote>
+                </div>
+                <div class="col-md-4">
+                    <blockquote class="blockquote">
+                        <p>“Amazing customer service. Helped me choose the right gaming laptop.”</p>
+                        <footer class="blockquote-footer text-white-50">Priya Verma</footer>
+                    </blockquote>
+                </div>
+                <div class="col-md-4">
+                    <blockquote class="blockquote">
+                        <p>“Great deals on accessories, I always buy from here.”</p>
+                        <footer class="blockquote-footer text-white-50">Arjun Patel</footer>
+                    </blockquote>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ✅ Why Choose Us -->
+    <section class="mb-5">
+        <h2 class="fw-bold mb-4 text-center">🌟 Why Choose ECART</h2>
+        <div class="row text-center">
+            <div class="col-md-3">
+                <i class="fa-solid fa-truck-fast fs-1 text-primary"></i>
+                <h6 class="mt-2">Fast Delivery</h6>
+                <p class="text-muted small">Across India</p>
+            </div>
+            <div class="col-md-3">
+                <i class="fa-solid fa-credit-card fs-1 text-primary"></i>
+                <h6 class="mt-2">Secure Payments</h6>
+                <p class="text-muted small">100% safe checkout</p>
+            </div>
+            <div class="col-md-3">
+                <i class="fa-solid fa-shield-halved fs-1 text-primary"></i>
+                <h6 class="mt-2">Warranty Products</h6>
+                <p class="text-muted small">Authorized sellers</p>
+            </div>
+            <div class="col-md-3">
+                <i class="fa-solid fa-headset fs-1 text-primary"></i>
+                <h6 class="mt-2">24/7 Support</h6>
+                <p class="text-muted small">We’re here to help</p>
+            </div>
+        </div>
+    </section>
+
+</div>
+

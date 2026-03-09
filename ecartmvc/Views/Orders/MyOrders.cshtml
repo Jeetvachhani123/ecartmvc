@@ -1,0 +1,345 @@
+﻿@model List<ecartmvc.Models.Order>
+@{
+    ViewData["Title"] = "My Orders";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-4">
+    <h2 class="mb-4">My Orders</h2>
+
+    @if (!Model?.Any() ?? true)
+    {
+        <div class="alert alert-info">You have no orders yet. <a href="/Products">Shop Now</a></div>
+    }
+    else
+    {
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" id="orderTabs" role="tablist">
+            <li class="nav-item" role="presentation"><a class="nav-link active" data-bs-toggle="tab" href="#all" role="tab">All</a></li>
+            <li class="nav-item" role="presentation"><a class="nav-link" data-bs-toggle="tab" href="#pending" role="tab">Waiting for Payment</a></li>
+            <li class="nav-item" role="presentation"><a class="nav-link" data-bs-toggle="tab" href="#inprocess" role="tab">In Process</a></li>
+            <li class="nav-item" role="presentation"><a class="nav-link" data-bs-toggle="tab" href="#shipping" role="tab">Shipping</a></li>
+            <li class="nav-item" role="presentation"><a class="nav-link" data-bs-toggle="tab" href="#completed" role="tab">Completed</a></li>
+            <li class="nav-item" role="presentation"><a class="nav-link" data-bs-toggle="tab" href="#refund" role="tab">Refund/Exchange</a></li>
+            <li class="nav-item" role="presentation"><a class="nav-link" data-bs-toggle="tab" href="#canceled" role="tab">Canceled</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- All -->
+            <div class="tab-pane fade show active" id="all" role="tabpanel">
+                @foreach (var order in Model)
+                {
+                    <!-- Order Card -->
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted">#@order.Id</span> |
+                                <i class="bi bi-calendar"></i> @order.OrderDate.ToString("MMM dd, yyyy")
+                            </div>
+
+                            @{
+                                // choose badge class safely (case-insensitive)
+                                var st = (order.Status ?? "").Trim().ToLowerInvariant();
+                                string badgeClass = st switch
+                                {
+                                    "pending" or "waiting for payment" => "bg-warning text-dark",
+                                    "in process" => "bg-info",
+                                    "shipping" => "bg-primary",
+                                    "completed" => "bg-success",
+                                    "canceled" or "cancelled" => "bg-danger",
+                                    _ => "bg-secondary"
+                                };
+                            }
+                            <span class="badge @badgeClass">@order.Status</span>
+                        </div>
+
+                        <div class="card-body">
+                            @if (order.OrderItems != null && order.OrderItems.Any())
+                            {
+                                var first = order.OrderItems.First();
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="@(first.Product?.ImageUrl ?? "/images/noimage.png")"
+                                         alt="@first.Product?.Name"
+                                         class="img-thumbnail me-3"
+                                         style="width:80px;height:80px;object-fit:cover;" />
+                                    <div>
+                                        <h6 class="mb-0">@first.Product?.Name</h6>
+                                        <small class="text-muted">x @first.Quantity</small>
+                                    </div>
+                                </div>
+
+                                @if (order.OrderItems.Count > 1)
+                                {
+                                    <div class="text-muted mb-2">+@((order.OrderItems.Count - 1)) more</div>
+                                }
+                            }
+
+                            <div class="mt-2 border-top pt-2">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Total Payment:</strong>
+                                    <span class="fw-bold">₹@order.TotalAmount.ToString("N2")</span>
+                                </div>
+                                <div class="text-muted">Payment: @(order.PaymentMethod ?? "—")</div>
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-3 gap-2">
+                                @{
+                                    var status = (order.Status ?? "").Trim().ToLowerInvariant();
+                                }
+
+                                @* Pending / Waiting for Payment *@
+                                @if (status == "pending" || status == "waiting for payment")
+                                {
+                                    <a href="@Url.Action("Pay", "Orders", new { id = order.Id })" class="btn btn-success btn-sm">Continue with Payment</a>
+
+                                    <form asp-action="CancelOrder" asp-controller="Orders" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@order.Id" />
+                                        <button type="submit" class="btn btn-danger btn-sm">Cancel Order</button>
+                                    </form>
+                                }
+                                else if (status == "in process")
+                                {
+                                    <form asp-action="CancelOrder" asp-controller="Orders" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@order.Id" />
+                                        <button type="submit" class="btn btn-danger btn-sm">Cancel Order</button>
+                                    </form>
+                                }
+                                else if (status == "shipping")
+                                {
+                                    <a href="@Url.Action("Track", "Orders", new { id = order.Id })" class="btn btn-primary btn-sm">Track Order</a>
+                                }
+                                else if (status == "completed")
+                                {
+                                    <a href="@Url.Action("Review", "Orders", new { id = order.Id })" class="btn btn-outline-success btn-sm">Give Review</a>
+                                }
+                                else if (status == "canceled" || status == "cancelled")
+                                {
+                                    <span class="text-danger fw-bold">Canceled</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Pending -->
+            <div class="tab-pane fade" id="pending" role="tabpanel">
+                @foreach (var order in Model.Where(o => ((o.Status ?? "").Equals("Pending", System.StringComparison.OrdinalIgnoreCase) || (o.Status ?? "").Equals("Waiting for Payment", System.StringComparison.OrdinalIgnoreCase))))
+                {
+                    @* same card markup duplicated for clarity (render inline) *@
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted">#@order.Id</span> |
+                                <i class="bi bi-calendar"></i> @order.OrderDate.ToString("MMM dd, yyyy")
+                            </div>
+                            @{
+                                var s = (order.Status ?? "").Trim().ToLowerInvariant(); string bclass = s == "pending" || s == "waiting for payment" ? "bg-warning text-dark" : "bg-secondary";
+                            }
+                            <span class="badge @bclass">@order.Status</span>
+                        </div>
+                        <div class="card-body">
+                            @if (order.OrderItems != null && order.OrderItems.Any())
+                            {
+                                var first = order.OrderItems.First();
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="@(first.Product?.ImageUrl ?? "/images/noimage.png")" class="img-thumbnail me-3" style="width:80px;height:80px;object-fit:cover;" />
+                                    <div>
+                                        <h6 class="mb-0">@first.Product?.Name</h6>
+                                        <small class="text-muted">x@first.Quantity</small>
+                                    </div>
+                                </div>
+                                @if (order.OrderItems.Count > 1)
+                                {
+                                    <div class="text-muted mb-2">+@((order.OrderItems.Count - 1)) more</div>
+                                }
+                            }
+                            <div class="mt-2 border-top pt-2">
+                                <div class="d-flex justify-content-between"><strong>Total Payment:</strong><span class="fw-bold">₹@order.TotalAmount.ToString("N2")</span></div>
+                                <div class="text-muted">Payment: @(order.PaymentMethod ?? "—")</div>
+                            </div>
+                            <div class="d-flex justify-content-end mt-3 gap-2">
+                                <a href="@Url.Action("Pay", "Orders", new { id = order.Id })" class="btn btn-success btn-sm">Continue with Payment</a>
+                                <form asp-action="CancelOrder" asp-controller="Orders" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@order.Id" />
+                                    <button type="submit" class="btn btn-danger btn-sm">Cancel Order</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- In Process -->
+            <div class="tab-pane fade" id="inprocess" role="tabpanel">
+                @foreach (var order in Model.Where(o => (o.Status ?? "").Equals("In Process", System.StringComparison.OrdinalIgnoreCase)))
+                {
+                    <!-- inline card (same pattern) -->
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted">#@order.Id</span> |
+                                <i class="bi bi-calendar"></i> @order.OrderDate.ToString("MMM dd, yyyy")
+                            </div>
+                            <span class="badge bg-info">@order.Status</span>
+                        </div>
+                        <div class="card-body">
+                            @if (order.OrderItems != null && order.OrderItems.Any())
+                            {
+                                var first = order.OrderItems.First();
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="@(first.Product?.ImageUrl ?? "/images/noimage.png")" class="img-thumbnail me-3" style="width:80px;height:80px;object-fit:cover;" />
+                                    <div>
+                                        <h6 class="mb-0">@first.Product?.Name</h6>
+                                        <small class="text-muted">x@first.Quantity</small>
+                                    </div>
+                                </div>
+                            }
+                            <div class="mt-2 border-top pt-2">
+                                <div class="d-flex justify-content-between"><strong>Total Payment:</strong><span class="fw-bold">₹@order.TotalAmount.ToString("N2")</span></div>
+                                <div class="text-muted">Payment: @(order.PaymentMethod ?? "—")</div>
+                            </div>
+                            <div class="d-flex justify-content-end mt-3">
+                                <form asp-action="CancelOrder" asp-controller="Orders" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@order.Id" />
+                                    <button type="submit" class="btn btn-danger btn-sm">Cancel Order</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Shipping -->
+            <div class="tab-pane fade" id="shipping" role="tabpanel">
+                @foreach (var order in Model.Where(o => (o.Status ?? "").Equals("Shipping", System.StringComparison.OrdinalIgnoreCase)))
+                {
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div><span class="text-muted">#@order.Id</span> | <i class="bi bi-calendar"></i> @order.OrderDate.ToString("MMM dd, yyyy")</div>
+                            <span class="badge bg-primary">@order.Status</span>
+                        </div>
+                        <div class="card-body">
+                            @if (order.OrderItems != null && order.OrderItems.Any())
+                            {
+                                var first = order.OrderItems.First();
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="@(first.Product?.ImageUrl ?? "/images/noimage.png")" class="img-thumbnail me-3" style="width:80px;height:80px;object-fit:cover;" />
+                                    <div>
+                                        <h6 class="mb-0">@first.Product?.Name</h6>
+                                        <small class="text-muted">x@first.Quantity</small>
+                                    </div>
+                                </div>
+                            }
+                            <div class="mt-2 border-top pt-2">
+                                <div class="d-flex justify-content-between"><strong>Total Payment:</strong><span class="fw-bold">₹@order.TotalAmount.ToString("N2")</span></div>
+                                <div class="text-muted">Payment: @(order.PaymentMethod ?? "—")</div>
+                            </div>
+                            <div class="d-flex justify-content-end mt-3">
+                                <a href="@Url.Action("Track", "Orders", new { id = order.Id })" class="btn btn-primary btn-sm">Track Order</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Completed -->
+            <div class="tab-pane fade" id="completed" role="tabpanel">
+                @foreach (var order in Model.Where(o => (o.Status ?? "").Equals("Completed", System.StringComparison.OrdinalIgnoreCase)))
+                {
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div><span class="text-muted">#@order.Id</span> | <i class="bi bi-calendar"></i> @order.OrderDate.ToString("MMM dd, yyyy")</div>
+                            <span class="badge bg-success">@order.Status</span>
+                        </div>
+                        <div class="card-body">
+                            @if (order.OrderItems != null && order.OrderItems.Any())
+                            {
+                                var first = order.OrderItems.First();
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="@(first.Product?.ImageUrl ?? "/images/noimage.png")" class="img-thumbnail me-3" style="width:80px;height:80px;object-fit:cover;" />
+                                    <div>
+                                        <h6 class="mb-0">@first.Product?.Name</h6>
+                                        <small class="text-muted">x@first.Quantity</small>
+                                    </div>
+                                </div>
+                            }
+                            <div class="mt-2 border-top pt-2">
+                                <div class="d-flex justify-content-between"><strong>Total Payment:</strong><span class="fw-bold">₹@order.TotalAmount.ToString("N2")</span></div>
+                                <div class="text-muted">Payment: @(order.PaymentMethod ?? "—")</div>
+                            </div>
+                            <div class="d-flex justify-content-end mt-3">
+                                <a href="@Url.Action("Review", "Orders", new { id = order.Id })" class="btn btn-outline-success btn-sm">Give Review</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Refund/Exchange -->
+            <div class="tab-pane fade" id="refund" role="tabpanel">
+                @foreach (var order in Model.Where(o => (o.Status ?? "").Equals("Refund/Exchange", System.StringComparison.OrdinalIgnoreCase)))
+                {
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div><span class="text-muted">#@order.Id</span> | <i class="bi bi-calendar"></i> @order.OrderDate.ToString("MMM dd, yyyy")</div>
+                            <span class="badge bg-secondary">@order.Status</span>
+                        </div>
+                        <div class="card-body">
+                            @if (order.OrderItems != null && order.OrderItems.Any())
+                            {
+                                var first = order.OrderItems.First();
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="@(first.Product?.ImageUrl ?? "/images/noimage.png")" class="img-thumbnail me-3" style="width:80px;height:80px;object-fit:cover;" />
+                                    <div>
+                                        <h6 class="mb-0">@first.Product?.Name</h6>
+                                        <small class="text-muted">x@first.Quantity</small>
+                                    </div>
+                                </div>
+                            }
+                            <div class="mt-2 border-top pt-2">
+                                <div class="d-flex justify-content-between"><strong>Total Payment:</strong><span class="fw-bold">₹@order.TotalAmount.ToString("N2")</span></div>
+                                <div class="text-muted">Payment: @(order.PaymentMethod ?? "—")</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Canceled -->
+            <div class="tab-pane fade" id="canceled" role="tabpanel">
+                @foreach (var order in Model.Where(o => (o.Status ?? "").Equals("Canceled", System.StringComparison.OrdinalIgnoreCase) || (o.Status ?? "").Equals("Cancelled", System.StringComparison.OrdinalIgnoreCase)))
+                {
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div><span class="text-muted">#@order.Id</span> | <i class="bi bi-calendar"></i> @order.OrderDate.ToString("MMM dd, yyyy")</div>
+                            <span class="badge bg-danger">@order.Status</span>
+                        </div>
+                        <div class="card-body">
+                            @if (order.OrderItems != null && order.OrderItems.Any())
+                            {
+                                var first = order.OrderItems.First();
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="@(first.Product?.ImageUrl ?? "/images/default.png")" class="img-thumbnail me-3" style="width:80px;height:80px;object-fit:cover;" />
+                                    <div>
+                                        <h6 class="mb-0">@first.Product?.Name</h6>
+                                        <small class="text-muted">x@first.Quantity</small>
+                                    </div>
+                                </div>
+                            }
+                            <div class="mt-2 border-top pt-2">
+                                <div class="d-flex justify-content-between"><strong>Total Payment:</strong><span class="fw-bold">₹@order.TotalAmount.ToString("N2")</span></div>
+                                <div class="text-muted">Payment: @(order.PaymentMethod ?? "—")</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+        </div>
+    }
+</div>

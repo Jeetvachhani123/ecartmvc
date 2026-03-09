@@ -1,0 +1,21 @@
+﻿@model List<ecartmvc.Models.Product>
+@if (Model != null && Model.Any())
+{
+    foreach (var p in Model)
+    {
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 shadow-sm">
+                <img src="@p.ImageUrl" class="card-img-top" alt="@p.Name" />
+                <div class="card-body text-center">
+                    <h6 class="card-title">@p.Name</h6>
+                    <p class="card-text text-muted"> ₹ @p.Price</p>
+                    <a href="/Products/Details/@p.Id" class="btn btn-sm btn-primary">Go To Buy</a>
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <p class="text-muted">No products found.</p>
+}

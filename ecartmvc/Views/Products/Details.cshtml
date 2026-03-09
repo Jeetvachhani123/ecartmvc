@@ -1,0 +1,157 @@
+﻿@model ecartmvc.Models.ProductViewModel
+@using Microsoft.AspNetCore.Http
+
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Access session directly via HttpContext
+    var sessionUser = Context.Session.GetString("Username");
+
+    // Fallback to Identity if session is empty
+    var loggedInUser = !string.IsNullOrEmpty(sessionUser)
+        ? sessionUser
+        : (User.Identity != null && User.Identity.IsAuthenticated ? User.Identity.Name : null);
+}
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Product image -->
+        <div class="col-md-5 mb-4">
+            <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid rounded shadow-sm"
+                 style="max-height:400px; object-fit:contain;" />
+        </div>
+
+        <!-- Product details -->
+        <div class="col-md-7">
+            <h2 class="fw-bold">@Model.Name</h2>
+            <p class="text-muted">Brand: <strong>@Model.Brand</strong></p>
+            <p class="text-muted">Category: <strong>@Model.Category</strong></p>
+            <h3 class="text-primary mb-3">₹@Model.Price</h3>
+            <p>@Model.Description</p>
+
+            <!-- Rating display -->
+            <div class="mb-3">
+                @if (Model.ReviewCount > 0)
+                {
+                    for (int i = 1; i <= 5; i++)
+                    {
+                        if (i <= Math.Round(Model.AverageRating))
+                        {
+                            <i class="bi bi-star-fill text-warning"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-star text-secondary"></i>
+                        }
+                    }
+                    <span class="ms-2 text-muted">
+                        @Model.AverageRating.ToString("0.0") / 5.0 (@Model.ReviewCount reviews)
+                    </span>
+                }
+                else
+                {
+                    <span class="text-muted">No reviews yet</span>
+                }
+            </div>
+
+            <!-- Add to Cart -->
+            <form asp-controller="Cart" asp-action="Add" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="productId" value="@Model.Id" />
+                <input type="hidden" name="quantity" value="1" />
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="bi bi-cart-plus me-1"></i> Add to Cart
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <hr class="my-5" />
+
+    <!-- Alerts -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="row">
+        <!-- Customer Reviews -->
+        <div class="col-md-8">
+            <h4 class="mb-3">Customer Reviews</h4>
+
+            @if (Model.Reviews != null && Model.Reviews.Any())
+            {
+                foreach (var review in Model.Reviews.OrderByDescending(r => r.CreatedAt))
+                {
+                    <div class="border rounded p-3 mb-3 shadow-sm bg-light">
+                        <div class="d-flex justify-content-between">
+                            <strong>@review.UserName</strong>
+                            <small class="text-muted">@review.CreatedAt.ToString("dd MMM yyyy")</small>
+                        </div>
+                        <div>
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= review.Rating)
+                                {
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-star text-secondary"></i>
+                                }
+                            }
+                        </div>
+                        <p class="mt-2 mb-0">@review.Comment</p>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-muted">No reviews yet. Be the first to review this product!</p>
+            }
+        </div>
+
+        <!-- Write a Review -->
+        <div class="col-md-4">
+            <h4 class="mb-3">Write a Review</h4>
+
+            @if (!string.IsNullOrEmpty(loggedInUser))
+            {
+                <p class="text-muted">You are reviewing as <strong>@loggedInUser</strong></p>
+                <form asp-controller="Products" asp-action="AddReview" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ProductId" value="@Model.Id" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <select name="Rating" class="form-select" required>
+                            <option value="">Select...</option>
+                            @for (int i = 5; i >= 1; i--)
+                            {
+                                <option value="@i">@i ★</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Comment</label>
+                        <textarea name="Comment" class="form-control" rows="3" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Submit Review</button>
+                </form>
+            }
+            else
+            {
+                <p class="text-muted">
+                    Please <a asp-controller="Account" asp-action="Login">login</a> to write a review.
+                </p>
+            }
+        </div>
+    </div>
+</div>
